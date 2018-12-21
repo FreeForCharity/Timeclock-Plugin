@@ -542,9 +542,7 @@ class FFC_Volunteer_Timeclock {
         include "aio-time-clock-box-content.php";
     }
 
-
-
-    private function get_employee_select($selected)
+    public function get_employee_select($selected)
     {
         $selected = json_decode($selected);
         $count = 0;
@@ -662,7 +660,7 @@ class FFC_Volunteer_Timeclock {
         }
     }
 
-    private function get_time_zone_list()
+    public function get_time_zone_list()
     {
         $tzlist = DateTimeZone::listIdentifiers(DateTimeZone::ALL);
         return $tzlist;
@@ -927,5 +925,7 @@ class FFC_Volunteer_Timeclock {
         clean_object_term_cache($user_id, 'department');
     }
 }
+
+global $FFC_timeclock;
 
 $FFC_timeclock = new FFC_Volunteer_Timeclock();

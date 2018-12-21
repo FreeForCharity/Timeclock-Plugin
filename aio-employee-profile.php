@@ -5,7 +5,7 @@ global $current_user;
 $timeclock_button = null;
 if (is_user_logged_in() == true) {
     wp_get_current_user();
-    $tc_page = aio_check_tc_shortcode_lite();
+    $tc_page = $FFC_timeclock->check_tc_shortcode();
 ?>
 <table>
 <?php 
@@ -55,9 +55,9 @@ if ($tc_page != null){
                 </td>
                 <td>
                     <?php if (get_post_meta(get_the_ID(), 'employee_clock_out_time', true)): ?>
-                        <?php $shift_sum = aio_date_difference_lite(get_post_meta(get_the_ID(), 'employee_clock_out_time', true), get_post_meta(get_the_ID(), 'employee_clock_in_time', true));
+                        <?php $shift_sum = $FFC_timeclock->date_difference(get_post_meta(get_the_ID(), 'employee_clock_out_time', true), get_post_meta(get_the_ID(), 'employee_clock_in_time', true));
                         echo $shift_sum . "<br />";
-                        $shift_total_time = aio_sum_the_time_lite($shift_total_time, $shift_sum);
+                        $shift_total_time = $FFC_timeclock->sum_the_time($shift_total_time, $shift_sum);
                         ?>
                     <?php endif;?>
                 </td>

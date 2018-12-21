@@ -39,7 +39,7 @@
             _e('<div id="setting-error-settings_updated" class="updated settings-error">WARNING!! Permalinks have to be set to anything other than default for the Timeclock to work properly.  We recommend you user the Post Name setting. <br /><a class="button" href="' . get_site_url() . '/wp-admin/options-permalink.php">Configure Permalinks</a></div>');
         }
         if ($_GET['job'] == "create_timeclock_page") {
-            $tc_page = aio_check_tc_shortcode_lite();
+            $tc_page = $FFC_timeclock->check_tc_shortcode();
             if ($tc_page == null) {
                 $my_post = array(
                     'post_type' => 'page',
@@ -66,7 +66,7 @@
             echo '</div>';
         }
         if ($_GET['job'] == "create_eprofile_page") {
-            $eprofile_page = check_eprofile_shortcode_lite();
+            $eprofile_page = $FFC_timeclock->check_eprofile_shortcode();
             if ($eprofile_page == null) {
                 $my_post = array(
                     'post_type' => 'page',
@@ -131,7 +131,7 @@
                     <th scope="col" class="manage-column column-columnname"><strong><?php _e('TimeClock'); ?>: </strong></th>
                     <td>
                         <?php
-                        $tc_page = aio_check_tc_shortcode_lite();
+                        $tc_page = $FFC_timeclock->check_tc_shortcode();
                         if ($tc_page != null) {
                             _e('<a href="' . get_permalink($tc_page) . '" class="button small_button" target="_blank"><i class="dashicons dashicons-search"></i> View Page</a>');
                             _e('<a href="/wp-admin/post.php?post=' . $tc_page . '&action=edit" class="button small_button" target="_blank"><i class="dashicons dashicons-edit"></i> Edit Page</a>');
@@ -215,7 +215,7 @@
                         <select name="aio_timeclock_time_zone">
                             <option value="dynamic">Dynamic</option>
                             <?php
-                            $tzlist = aioGetTimeZoneListLite();
+                            $tzlist = $FFC_timeclock->get_time_zone_list();
                             foreach ($tzlist as $tz => $label) {
                                 $select = '';
                                 if (get_option("aio_timeclock_time_zone") == $label) {

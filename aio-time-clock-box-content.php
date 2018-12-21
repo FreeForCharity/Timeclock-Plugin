@@ -28,7 +28,7 @@
                 <a class="button" onclick="editEmployee()" title="Edit Employee"><span class="dashicons dashicons-admin-users vmiddle"></span></a>
                 <select id="employee_id" name="employee_id" style="display:none;">
                     <?php 
-                        aioGetEmployeeSelect($selected_employee);
+                        $FFC_timeclock->get_employee_select($selected_employee);
                     ?>
                 </select>
             </td>
@@ -96,7 +96,7 @@
         <tr class="alternate">
                 <th scope="col" class="manage-column column-columnname"><strong><?php _e('Total Shift Time:'); ?> </strong></th>
             <td>
-                <?php echo aioGetShiftTotal($post->ID); ?>
+                <?php echo $FFC_timeclock->get_shift_total($post->ID); ?>
             </td>
             <td>
                 <i></i>
