@@ -20,19 +20,19 @@ class FFC_Volunteer_Timeclock {
         add_action("admin_init", array($this, 'admin_init');
         add_action('add_meta_boxes', array($this, 'shift_info_box_meta'));
         add_action('admin_menu', array($this, 'remove_my_post_metaboxes'));
-        add_action('admin_init', 'register_aio_timeclock_lite_settings');
+        add_action('admin_init', array($this, 'registertimeclocksettings'));
         add_action('init', array($this, 'script_enqueuer'));
         add_action('admin_init', array($this, 'admin_script_enqueuer'));
-        add_filter('user_contactmethods', 'aio_modify_employee_wage_lite');
-        add_filter('manage_edit-department_columns', 'aio_manage_department_user_column_lite');
-        add_action('show_user_profile', 'aio_edit_user_department_section_lite');
-        add_action('edit_user_profile', 'aio_edit_user_department_section_lite');
-        add_action('manage_department_custom_column', 'aio_manage_department_column_lite', 10, 3);
-        add_action('personal_options_update', 'aio_save_user_department_terms_lite');
-        add_action('edit_user_profile_update', 'aio_save_user_department_terms_lite');
-        add_action('admin_menu', 'aio_add_department_admin_page_lite');
-        add_action('init', 'aio_user_taxonomy_lite');
-        add_action('admin_menu','remove_my_post_metaboxes_aio_lite');
+        add_filter('user_contactmethods', array($this, 'modify_employee_wage'));
+        add_filter('manage_edit-department_columns', array($this, 'manage_department_user_column'));
+        add_action('show_user_profile', array($this, 'edit_user_department_section'));
+        add_action('edit_user_profile', array($this, 'edit_user_department_section'));
+        add_action('manage_department_custom_column', array($this, 'manage_department_column'), 10, 3);
+        add_action('personal_options_update', array($this, 'save_user_department_terms'));
+        add_action('edit_user_profile_update', array($this, 'save_user_department_terms'));
+        add_action('admin_menu', array($this, 'add_department_admin_page'));
+        add_action('init', array($this, 'user_taxonomy'));
+        add_action('admin_menu',array($this, 'remove_my_post_metaboxes'));
 
         define_roles();
 
@@ -41,7 +41,7 @@ class FFC_Volunteer_Timeclock {
         }
 
         if (get_option('aio_timeclock_redirect_employees') == "enabled") {
-            add_filter('login_redirect', 'aio_member_login_redirect', 10, 3);
+            add_filter('login_redirect', array($this, 'member_login_redirect'), 10, 3);
         }
 
         add_action('plugins_loaded', array($this, 'init')); 
@@ -50,7 +50,7 @@ class FFC_Volunteer_Timeclock {
     }
 
     private function admin_actions(){
-        add_action('save_post', 'aio_save_shift_meta_lite');
+        add_action('save_post', array($this, 'save_shift_meta'));
         add_action('admin_menu', array($this, 'plugin_admin_menu'));
     }
 
@@ -73,7 +73,7 @@ class FFC_Volunteer_Timeclock {
 
     public function show_time_clock($atts)
     {
-        $tc_page = aio_check_tc_shortcode_lite();
+        $tc_page = check_tc_shortcode();
         $nonce = wp_create_nonce("clock_in_nonce");
         $link = admin_url('admin-ajax.php?action=clock_in_nonce&post_id=' . get_the_ID() . '&nonce=' . $nonce);
         require_once "templates/time-clock-style1.php";
@@ -81,7 +81,7 @@ class FFC_Volunteer_Timeclock {
 
     public function show_employee_profile($atts)
     {
-        $ep_page = check_eprofile_shortcode_lite();
+        $ep_page = check_eprofile_shortcode();
         $nonce = wp_create_nonce("clock_in_nonce");
         $link = admin_url('admin-ajax.php?action=clock_in_nonce&post_id=' . get_the_ID() . '&nonce=' . $nonce);
         require_once "aio-employee-profile.php";
@@ -89,13 +89,13 @@ class FFC_Volunteer_Timeclock {
 
     public function plugin_admin_menu()
     {
-        $page_hook_suffix = add_menu_page('Time Clock Lite', 'Time Clock Lite', 'edit_posts', 'aio-tc-lite', 'aio_timeclock_settings_page_lite', 'dashicons-clock');
-        add_submenu_page('aio-tc-lite', 'General Settings', 'General Settings', 'edit_posts', 'aio-tc-lite', 'aio_timeclock_settings_page_lite');
-        add_submenu_page('aio-tc-lite', 'Real Time Monitoring', 'Real Time Monitoring', 'edit_posts', 'aio-monitoring-sub', 'aio_timeclock_monitoring_page');
-        add_submenu_page('aio-tc-lite', 'Employees', 'Employees', 'edit_posts', 'aio-employees-sub', 'aio_timeclock_lite_employee_page');
-        add_submenu_page('aio-tc-lite', 'Departments', 'Departments', 'edit_posts', 'aio-department-sub', 'aio_timeclock_department_page');    
-        add_submenu_page('aio-tc-lite', 'Shifts', 'Shifts', 'edit_posts', 'aio-shifts-sub', 'aio_timeclock_lite_shifts_page');
-        add_submenu_page('aio-tc-lite', 'Reports', 'Reports', 'edit_posts', 'aio-reports-sub', 'aio_timeclock_reports_page_lite');
+        $page_hook_suffix = add_menu_page('Time Clock Lite', 'Time Clock Lite', 'edit_posts', 'aio-tc-lite', array($this, 'timeclock_settings_page'), 'dashicons-clock');
+        add_submenu_page('aio-tc-lite', 'General Settings', 'General Settings', 'edit_posts', 'aio-tc-lite', array($this, 'timeclock_settings_page'));
+        add_submenu_page('aio-tc-lite', 'Real Time Monitoring', 'Real Time Monitoring', 'edit_posts', 'aio-monitoring-sub', array($this, 'timeclock_monitoring_page'));
+        add_submenu_page('aio-tc-lite', 'Employees', 'Employees', 'edit_posts', 'aio-employees-sub', array($this, 'timeclock_employee_page'));
+        add_submenu_page('aio-tc-lite', 'Departments', 'Departments', 'edit_posts', 'aio-department-sub', array($this, 'timeclock_department_page'));    
+        add_submenu_page('aio-tc-lite', 'Shifts', 'Shifts', 'edit_posts', 'aio-shifts-sub', array($this, 'timeclock_shifts_page'));
+        add_submenu_page('aio-tc-lite', 'Reports', 'Reports', 'edit_posts', 'aio-reports-sub', array($this, 'timeclock_reports_page'));
     }
 
     public function script_enqueuer()
@@ -269,10 +269,10 @@ class FFC_Volunteer_Timeclock {
             add_post_meta($open_shift_id, 'employee_clock_out_time', $date, true);
             add_post_meta($open_shift_id, 'ip_address_out', $_SERVER['REMOTE_ADDR'], true);   
             $employee_clock_in_time = get_post_meta($open_shift_id, 'employee_clock_in_time', true);                   
-            $time_total = aio_date_difference_lite($date, $employee_clock_in_time);
+            $time_total = date_difference($date, $employee_clock_in_time);
             $day = date("Y-m-d");
             add_post_meta($open_shift_id, 'end_date', $day, true);
-            $hours_total = aio_date_to_hours($time_total);
+            $hours_total = date_to_hours($time_total);
             update_post_meta($open_shift_id, 'total_time', $hours_total);
 
             wp_update_post(array('ID' => $open_shift_id, 'post_modified_gmt' => $date));
@@ -320,7 +320,7 @@ class FFC_Volunteer_Timeclock {
                     "date_range_start" => $date_range_start,
                     "date_range_end" => $date_range_end,
                     "shifts" =>
-                    aioGetShiftTotalFromRange(
+                    get_shift_total_from_range(
                         $employee,
                         $date_range_start,
                         $date_range_end
@@ -470,7 +470,7 @@ class FFC_Volunteer_Timeclock {
                 echo get_post_meta($post_id, 'employee_clock_out_time', true);
                 break;
             case 'total_shift_time':
-                echo aioGetShiftTotal($post_id);
+                echo get_shift_total($post_id);
                 break;
         }
     }
@@ -492,13 +492,13 @@ class FFC_Volunteer_Timeclock {
         return $department;
     }
 
-    private function aioGetShiftTotal($post_id)
+    private function get_shift_total($post_id)
     {
         $employee_clock_in_time = get_post_meta($post_id, 'employee_clock_in_time', true);
         $employee_clock_out_time = get_post_meta($post_id, 'employee_clock_out_time', true);
 
         if ($employee_clock_in_time != null && $employee_clock_out_time != null) {
-            $total_shift_time = aio_date_difference_lite($employee_clock_out_time, $employee_clock_in_time);
+            $total_shift_time = date_difference($employee_clock_out_time, $employee_clock_in_time);
         } else {
             $total_shift_time = '00:00:00';
         }
@@ -530,48 +530,48 @@ class FFC_Volunteer_Timeclock {
         add_meta_box(
             'shift_info_box',
             __('Shift Info', 'aio-timeclock'),
-            array($this, 'aio_shift_info_box_content'),
+            array($this, 'shift_info_box_content'),
             'shift',
             'normal',
             'high'
         );
     }
 
-    public function aio_shift_info_box_content()
+    public function shift_info_box_content()
     {
         include "aio-time-clock-box-content.php";
     }
 
-}
 
-function aioGetEmployeeSelect($selected)
-{
-    $selected = json_decode($selected);
-    $count = 0;
-    $users = get_users('fields=all_with_meta');
-    usort($users, create_function('$a, $b', 'if($a->last_name == $b->last_name) { return 0;} return ($a->last_name > $b->last_name) ? 1 : -1;'));
-    foreach (array_filter($users, 'aio_filter_roles_lite') as $user) {
-        $active = "";
-        if ($selected == $user->ID) {
-            $active = "selected";
+
+    private function get_employee_select($selected)
+    {
+        $selected = json_decode($selected);
+        $count = 0;
+        $users = get_users('fields=all_with_meta');
+        usort($users, create_function('$a, $b', 'if($a->last_name == $b->last_name) { return 0;} return ($a->last_name > $b->last_name) ? 1 : -1;'));
+        foreach (array_filter($users, array($this, 'filter_roles')) as $user) {
+            $active = "";
+            if ($selected == $user->ID) {
+                $active = "selected";
+            }
+            echo '<option value="' . $user->ID . '" ' . $active . '>' . $user->last_name . ", " . $user->first_name . '</option>';
+            $count++;
         }
-        echo '<option value="' . $user->ID . '" ' . $active . '>' . $user->last_name . ", " . $user->first_name . '</option>';
-        $count++;
     }
-}
 
-function aioGetBuildInRolesLite(){
-    return array('employee', 'manager', 'volunteer', 'contractor', 'administrator');
-}
+    public function get_build_in_roles(){
+        return array('employee', 'manager', 'volunteer', 'contractor', 'administrator');
+    }
 
-function aio_filter_roles_lite($user)
-{
-    $roles = aioGetBuildInRolesLite();
-    return array_intersect($user->roles, $roles);
-}
+    public function filter_roles($user)
+    {
+        $roles = get_build_in_roles();
+        return array_intersect($user->roles, $roles);
+    }
 
-function aio_save_shift_meta_lite($post_id)
-{
+    public function save_shift_meta($post_id)
+    {
 
     if (isset($_REQUEST['clock_in'])) {
         update_post_meta($post_id, 'employee_clock_in_time', sanitize_text_field($_REQUEST['clock_in']));
@@ -583,350 +583,349 @@ function aio_save_shift_meta_lite($post_id)
     }
 
     if (isset($_REQUEST['employee_id'])) {
-        remove_action('save_post', 'aio_save_shift_meta_lite');
+        remove_action('save_post', array($this, 'save_shift_meta'));
         $arg = array(
             'ID' => $post_id,
             'post_author' => sanitize_key(intval($_REQUEST['employee_id'])),
         );
         wp_update_post($arg);
-        add_action('save_post', 'aio_save_shift_meta_lite');
+        add_action('save_post', array($this, 'save_shift_meta'));
     }
 
-}
-
-function aio_remove_my_post_metaboxes_lite()
-{
-    remove_meta_box('authordiv', 'shift', 'normal');
-}
-
-function aio_timeclock_settings_page_lite()
-{
-    include "aio-settings.php";
-}
-
-function aio_timeclock_monitoring_page()
-{
-    include "aio-monitoring.php";
-}
-
-function aio_timeclock_reports_page_lite()
-{
-    include "aio-reports.php";
-}
-
-function register_aio_timeclock_lite_settings()
-{
-    register_setting('nertworks-timeclock-settings-group', 'aio_company_name');    
-    register_setting('nertworks-timeclock-settings-group', 'aio_pay_schedule');
-    register_setting('nertworks-timeclock-settings-group', 'aio_wage_manage');
-    register_setting('nertworks-timeclock-settings-group', 'aio_timeclock_time_zone');
-    register_setting('nertworks-timeclock-settings-group', 'aio_timeclock_text_align');
-    register_setting('nertworks-timeclock-settings-group', 'aio_timeclock_redirect_employees');
-    register_setting('nertworks-timeclock-settings-group', 'aio_timeclock_show_avatar');
-    register_setting('nertworks-timeclock-settings-group', 'aio_timeclock_show_current_dept');
-    register_setting('nertworks-timeclock-settings-group', 'aio_use_javascript_redirect');
-}
-
-function aio_check_tc_shortcode_lite()
-{
-    $loop = new WP_Query(array('post_type' => 'page', 'posts_per_page' => -1));
-    while ($loop->have_posts()): $loop->the_post();
-        $content = get_the_content();
-        if (has_shortcode($content, 'show_aio_time_clock_lite')) {
-            return $loop->post->ID;
-            break;
-        } else {
-            //echo "none";
-        }
-    endwhile;
-    wp_reset_query();
-}
-
-function check_eprofile_shortcode_lite()
-{
-    $loop = new WP_Query(array('post_type' => 'page', 'posts_per_page' => -1));
-    while ($loop->have_posts()) : $loop->the_post();
-        $content = get_the_content();
-        if (has_shortcode($content, 'show_aio_employee_profile_lite')) {
-            return $loop->post->ID;
-        } else {
-            //echo "none";
-        }
-    endwhile;
-    wp_reset_query();
-}
-
-function aio_member_login_redirect($redirect_to, $request, $user)
-{
-    $tc_page = aio_check_tc_shortcode_lite();
-    $role = 'employee';
-    if (is_array($user->roles) && in_array($role, $user->roles)) {
-        return get_permalink($tc_page);
-    } else {
-        return $redirect_to;
+    public function timeclock_settings_page()
+    {
+        include "aio-settings.php";
     }
-}
 
-function aioGetTimeZoneListLite()
-{
-    $tzlist = DateTimeZone::listIdentifiers(DateTimeZone::ALL);
-    return $tzlist;
-}
 
-function aio_timeclock_lite_shifts_page()
-{    
-    if (get_option("aio_use_javascript_redirect") == "enabled"){
-        echo '<script>
-            window.location="'.admin_url().'/edit.php?post_type=shift";
-        </script>';
+
+    public function timeclock_monitoring_page()
+    {
+        include "aio-monitoring.php";
     }
-    else{
-        wp_redirect( admin_url().'/edit.php?post_type=shift' );
-        exit;
-    }
-}
 
-function aio_timeclock_lite_employee_page()
-{    
-    include("aio-employees.php");
-}
-
-function aio_timeclock_department_page()
-{
-    if (get_option("aio_use_javascript_redirect") == "enabled"){
-        echo '<script>
-            window.location="'.admin_url().'/edit-tags.php?taxonomy=department";
-        </script>';
+    public function timeclock_reports_page()
+    {
+        include "aio-reports.php";
     }
-    else{
-        wp_redirect( admin_url().'/edit-tags.php?taxonomy=department' );
-        exit;
-    }
-}
 
-function aio_timeclock_manager_page()
-{
-    if (get_option("aio_use_javascript_redirect") == "enabled"){
-        echo '<script>
-            window.location="'.admin_url().'/users.php?role=manager";
-        </script>';
+    public function register_timeclock_settings()
+    {
+        register_setting('nertworks-timeclock-settings-group', 'aio_company_name');    
+        register_setting('nertworks-timeclock-settings-group', 'aio_pay_schedule');
+        register_setting('nertworks-timeclock-settings-group', 'aio_wage_manage');
+        register_setting('nertworks-timeclock-settings-group', 'aio_timeclock_time_zone');
+        register_setting('nertworks-timeclock-settings-group', 'aio_timeclock_text_align');
+        register_setting('nertworks-timeclock-settings-group', 'aio_timeclock_redirect_employees');
+        register_setting('nertworks-timeclock-settings-group', 'aio_timeclock_show_avatar');
+        register_setting('nertworks-timeclock-settings-group', 'aio_timeclock_show_current_dept');
+        register_setting('nertworks-timeclock-settings-group', 'aio_use_javascript_redirect');
     }
-    else{
-        wp_redirect( admin_url().'/users.php?role=manager' );
-        exit;
-    }
-}
 
-function aio_timeclock_tc_admin_page()
-{ 
-    if (get_option("aio_use_javascript_redirect") == "enabled"){
-        echo '<script>
-            window.location="'.admin_url().'/users.php?role=time_clock_admin";
-        </script>';
-    }
-    else{
-        wp_redirect( admin_url().'/users.php?role=time_clock_admin' );
-        exit;
-    }
-}
-
-function aioGetShiftTotalFromRange($employee, $date_range_start, $date_range_end)
-{
-    $shift_total_time = 0;
-    $shift_sum = '';
-    $shift_array = array();
-    $count = 0;
-    $loop = new WP_Query(array('post_type' => 'shift', 'author' => $employee, 'posts_per_page' => -1));
-
-    while ($loop->have_posts()): $loop->the_post();
-        $shift_id = $loop->post->ID;
-        $custom = get_post_custom($shift_id);
-        $employee_clock_in_time = $custom["employee_clock_in_time"][0];
-        $employee_clock_out_time = $custom["employee_clock_out_time"][0];
-        if ($employee_clock_in_time != null) {
-            $employee_clock_in_time = date('Y/m/d h:i:s A', strtotime($employee_clock_in_time));
-        }
-        if ($employee_clock_out_time != null) {
-            $employee_clock_out_time = date('Y/m/d h:i:s A', strtotime($employee_clock_out_time));
-        }
-        $searchDateBegin = date('Y/m/d h:i:s A', strtotime($date_range_start));
-        $searchDateEnd = date('Y/m/d h:i:s A', strtotime($date_range_end));
-        if ((strtotime($employee_clock_in_time) >= strtotime($searchDateBegin)) && (strtotime($employee_clock_in_time) <= strtotime($searchDateEnd))) {
-            $author_id = $loop->post->post_author;
-            $last_name = get_the_author_meta('last_name', $author_id);
-            $first_name = get_the_author_meta('first_name', $author_id);
-
-            if ($employee_clock_in_time != null && $employee_clock_out_time != null) {
-                $shift_sum = aio_date_difference_lite($employee_clock_out_time, $employee_clock_in_time);
+    public function check_tc_shortcode()
+    {
+        $loop = new WP_Query(array('post_type' => 'page', 'posts_per_page' => -1));
+        while ($loop->have_posts()): $loop->the_post();
+            $content = get_the_content();
+            if (has_shortcode($content, 'show_aio_time_clock_lite')) {
+                return $loop->post->ID;
+                break;
             } else {
-                $shift_sum = '00:00:00';
+                //echo "none";
             }
-            $shift_total_time = aio_sum_the_time_lite($shift_total_time, $shift_sum);
-            array_push($shift_array,
-                array(
-                    "shift_id" => $shift_id,
-                    "employee_clock_in_time" => $employee_clock_in_time,
-                    "employee_clock_out_time" => $employee_clock_out_time,
-                    "first_name" => $first_name,
-                    "last_name" => $last_name,
-                    "shift_sum" => $shift_sum,
-                )
-            );
-            $count++;
+        endwhile;
+        wp_reset_query();
+    }
+
+    public function check_eprofile_shortcode()
+    {
+        $loop = new WP_Query(array('post_type' => 'page', 'posts_per_page' => -1));
+        while ($loop->have_posts()) : $loop->the_post();
+            $content = get_the_content();
+            if (has_shortcode($content, 'show_aio_employee_profile_lite')) {
+                return $loop->post->ID;
+            } else {
+                //echo "none";
+            }
+        endwhile;
+        wp_reset_query();
+    }
+
+    public function member_login_redirect($redirect_to, $request, $user)
+    {
+        $tc_page = check_tc_shortcode();
+        $role = 'employee';
+        if (is_array($user->roles) && in_array($role, $user->roles)) {
+            return get_permalink($tc_page);
+        } else {
+            return $redirect_to;
         }
-    endwhile;
-    wp_reset_query();
-    return array(
-        "response" => "success",
-        "shift_count" => $count,
-        "shift_total_time" => $shift_total_time,
-        "shift_array" => $shift_array,
-    );
-}
-
-function aio_sum_the_time_lite($time1, $time2)
-{
-    $times = array($time1, $time2);
-    $seconds = 0;
-    foreach ($times as $time) {
-        list($hour, $minute, $second) = explode(':', $time);
-        $seconds += $hour * 3600;
-        $seconds += $minute * 60;
-        $seconds += $second;
     }
-    $hours = floor($seconds / 3600);
-    $seconds -= $hours * 3600;
-    $minutes = floor($seconds / 60);
-    $seconds -= $minutes * 60;
-    return sprintf('%02d:%02d:%02d', $hours, $minutes, $seconds);
-}
 
-function aio_modify_employee_wage_lite($profile_fields)
-{
-    $profile_fields['employee_wage'] = 'Wage';
-    return $profile_fields;
-}
-
-function aio_user_taxonomy_lite()
-{
-    register_taxonomy(
-        'department',
-        'user',
-        array(
-            'public' => true, 'show_admin_column' => true,
-            'labels' => array(
-                'name' => __('Departments'),
-                'singular_name' => __('Department'),
-                'menu_name' => __('Departments'),
-                'search_items' => __('Search Departments'),
-                'popular_items' => __('Popular Departments'),
-                'all_items' => __('All Departments'),
-                'edit_item' => __('Edit Department'),
-                'update_item' => __('Update Department'),
-                'add_new_item' => __('Add New Department'),
-                'new_item_name' => __('New Department Name'),
-                'separate_items_with_commas' => __('Separate Departments with commas'),
-                'add_or_remove_items' => __('Add or remove Departments'),
-                'choose_from_most_used' => __('Choose from the most popular Departments'),
-            ),
-            'rewrite' => array(
-                'with_front' => true,
-                'slug' => 'department' // Use 'author' (default WP user slug).
-            ),
-            'capabilities' => array(
-                'manage_terms' => 'edit_users', // Using 'edit_users' cap to keep this simple.
-                'edit_terms' => 'edit_users',
-                'delete_terms' => 'edit_users',
-                'assign_terms' => 'read',
-            ),
-            'update_count_callback' => 'aio_update_department_count' // Use a custom function to update the count.
-        )
-    );
-}
-
-function aio_add_department_admin_page_lite()
-{
-    $tax = get_taxonomy('department');
-    add_users_page(
-        esc_attr($tax->labels->menu_name),
-        esc_attr($tax->labels->menu_name),
-        $tax->cap->manage_terms,
-        'edit-tags.php?taxonomy=' . $tax->name
-    );
-}
-
-function aio_manage_department_user_column_lite($columns)
-{
-    unset($columns['posts']);
-    $columns['users'] = __('Users');
-    return $columns;
-}
-
-function aio_update_department_count($terms, $taxonomy)
-{
-    global $wpdb;
-    foreach ((array)$terms as $term) {
-        $count = $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM $wpdb->term_relationships WHERE term_taxonomy_id = %d", $term));
-        do_action('edit_term_taxonomy', $term, $taxonomy);
-        $wpdb->update($wpdb->term_taxonomy, compact('count'), array('term_taxonomy_id' => $term));
-        do_action('edited_term_taxonomy', $term, $taxonomy);
+    private function get_time_zone_list()
+    {
+        $tzlist = DateTimeZone::listIdentifiers(DateTimeZone::ALL);
+        return $tzlist;
     }
-}
 
-function aio_manage_department_column_lite($display, $column, $term_id)
-{
-    if ('users' === $column) {
-        $term = get_term($term_id, 'department');
-        echo $term->count;
+    private function timeclock_shifts_page()
+    {    
+        if (get_option("aio_use_javascript_redirect") == "enabled"){
+            echo '<script>
+                window.location="'.admin_url().'/edit.php?post_type=shift";
+            </script>';
+        }
+        else{
+            wp_redirect( admin_url().'/edit.php?post_type=shift' );
+            exit;
+        }
     }
-}
 
-add_action( 'object_sync_for_salesforce_pull_success', 'FFC_pull_success', 10, 3 );
-function FFC_pull_success( $op, $result, $synced_object ) {
-    $map = $synced_object['mapping_object'];
-    $salesforce_id = $map['salesforce_id'];
-    $user_id = $map['wordpress_id'];
+    public function timeclock_employee_page()
+    {    
+        include("aio-employees.php");
+    }
 
-    update_user_meta( $user_id, 'SalesforceID',$saleforce_id );
-}
+    public function timeclock_department_page()
+    {
+        if (get_option("aio_use_javascript_redirect") == "enabled"){
+            echo '<script>
+                window.location="'.admin_url().'/edit-tags.php?taxonomy=department";
+            </script>';
+        }
+        else{
+            wp_redirect( admin_url().'/edit-tags.php?taxonomy=department' );
+            exit;
+        }
+    }
 
-function aio_edit_user_department_section_lite($user)
-{
-    $tax = get_taxonomy('department');
-    /* Make sure the user can assign terms of the department taxonomy before proceeding. */
-    if (!current_user_can($tax->cap->assign_terms))
-        return;
-    /* Get the terms of the 'department' taxonomy. */
-    $terms = get_terms('department', array('hide_empty' => false)); ?>
-    <h3><?php _e('Department'); ?></h3>
-    <table class="form-table">
-        <tr>
-            <th><label for="department"><?php _e('Select Department'); ?></label></th>
-            <td><?php
-                /* If there are any department terms, loop through them and display checkboxes. */
-                if (!empty($terms)) {
-                    foreach ($terms as $term) { ?>
-                        <input type="radio" name="department" id="department-<?php echo esc_attr($term->slug); ?>"
-                               value="<?php echo esc_attr($term->slug); ?>" <?php checked(true, is_object_in_term($user->ID, 'department', $term)); ?> />
-                        <label for="department-<?php echo esc_attr($term->slug); ?>"><?php echo $term->name; ?></label>
-                        <br/>
-                    <?php }
-                } /* If there are no department terms, display a message. */
-                else {
-                    _e('There are no departments available.');
+    private function timeclock_manager_page()
+    {
+        if (get_option("aio_use_javascript_redirect") == "enabled"){
+            echo '<script>
+                window.location="'.admin_url().'/users.php?role=manager";
+            </script>';
+        }
+        else{
+            wp_redirect( admin_url().'/users.php?role=manager' );
+            exit;
+        }
+    }
+
+    private function timeclock_tc_admin_page()
+    { 
+        if (get_option("aio_use_javascript_redirect") == "enabled"){
+            echo '<script>
+                window.location="'.admin_url().'/users.php?role=time_clock_admin";
+            </script>';
+        }
+        else{
+            wp_redirect( admin_url().'/users.php?role=time_clock_admin' );
+            exit;
+        }
+    }
+
+    public function get_shift_total_from_range($employee, $date_range_start, $date_range_end)
+    {
+        $shift_total_time = 0;
+        $shift_sum = '';
+        $shift_array = array();
+        $count = 0;
+        $loop = new WP_Query(array('post_type' => 'shift', 'author' => $employee, 'posts_per_page' => -1));
+
+        while ($loop->have_posts()): $loop->the_post();
+            $shift_id = $loop->post->ID;
+            $custom = get_post_custom($shift_id);
+            $employee_clock_in_time = $custom["employee_clock_in_time"][0];
+            $employee_clock_out_time = $custom["employee_clock_out_time"][0];
+            if ($employee_clock_in_time != null) {
+                $employee_clock_in_time = date('Y/m/d h:i:s A', strtotime($employee_clock_in_time));
+            }
+            if ($employee_clock_out_time != null) {
+                $employee_clock_out_time = date('Y/m/d h:i:s A', strtotime($employee_clock_out_time));
+            }
+            $searchDateBegin = date('Y/m/d h:i:s A', strtotime($date_range_start));
+            $searchDateEnd = date('Y/m/d h:i:s A', strtotime($date_range_end));
+            if ((strtotime($employee_clock_in_time) >= strtotime($searchDateBegin)) && (strtotime($employee_clock_in_time) <= strtotime($searchDateEnd))) {
+                $author_id = $loop->post->post_author;
+                $last_name = get_the_author_meta('last_name', $author_id);
+                $first_name = get_the_author_meta('first_name', $author_id);
+
+                if ($employee_clock_in_time != null && $employee_clock_out_time != null) {
+                    $shift_sum = date_difference($employee_clock_out_time, $employee_clock_in_time);
+                } else {
+                    $shift_sum = '00:00:00';
                 }
-                ?></td>
-        </tr>
-    </table>
-<?php 
+                $shift_total_time = sum_the_time($shift_total_time, $shift_sum);
+                array_push($shift_array,
+                    array(
+                        "shift_id" => $shift_id,
+                        "employee_clock_in_time" => $employee_clock_in_time,
+                        "employee_clock_out_time" => $employee_clock_out_time,
+                        "first_name" => $first_name,
+                        "last_name" => $last_name,
+                        "shift_sum" => $shift_sum,
+                    )
+                );
+                $count++;
+            }
+        endwhile;
+        wp_reset_query();
+        return array(
+            "response" => "success",
+            "shift_count" => $count,
+            "shift_total_time" => $shift_total_time,
+            "shift_array" => $shift_array,
+        );
+    }
+
+    public function sum_the_time($time1, $time2)
+    {
+        $times = array($time1, $time2);
+        $seconds = 0;
+        foreach ($times as $time) {
+            list($hour, $minute, $second) = explode(':', $time);
+            $seconds += $hour * 3600;
+            $seconds += $minute * 60;
+            $seconds += $second;
+        }
+        $hours = floor($seconds / 3600);
+        $seconds -= $hours * 3600;
+        $minutes = floor($seconds / 60);
+        $seconds -= $minutes * 60;
+        return sprintf('%02d:%02d:%02d', $hours, $minutes, $seconds);
+    }
+
+    private function modify_employee_wage($profile_fields)
+    {
+        $profile_fields['employee_wage'] = 'Wage';
+        return $profile_fields;
+    }
+
+    public function user_taxonomy()
+    {
+        register_taxonomy(
+            'department',
+            'user',
+            array(
+                'public' => true, 'show_admin_column' => true,
+                'labels' => array(
+                    'name' => __('Departments'),
+                    'singular_name' => __('Department'),
+                    'menu_name' => __('Departments'),
+                    'search_items' => __('Search Departments'),
+                    'popular_items' => __('Popular Departments'),
+                    'all_items' => __('All Departments'),
+                    'edit_item' => __('Edit Department'),
+                    'update_item' => __('Update Department'),
+                    'add_new_item' => __('Add New Department'),
+                    'new_item_name' => __('New Department Name'),
+                    'separate_items_with_commas' => __('Separate Departments with commas'),
+                    'add_or_remove_items' => __('Add or remove Departments'),
+                    'choose_from_most_used' => __('Choose from the most popular Departments'),
+                ),
+                'rewrite' => array(
+                    'with_front' => true,
+                    'slug' => 'department' // Use 'author' (default WP user slug).
+                ),
+                'capabilities' => array(
+                    'manage_terms' => 'edit_users', // Using 'edit_users' cap to keep this simple.
+                    'edit_terms' => 'edit_users',
+                    'delete_terms' => 'edit_users',
+                    'assign_terms' => 'read',
+                ),
+                'update_count_callback' => array($thus, 'update_department_count') // Use a custom function to update the count.
+            )
+        );
+    }
+
+    public function add_department_admin_page()
+    {
+        $tax = get_taxonomy('department');
+        add_users_page(
+            esc_attr($tax->labels->menu_name),
+            esc_attr($tax->labels->menu_name),
+            $tax->cap->manage_terms,
+            'edit-tags.php?taxonomy=' . $tax->name
+        );
+    }
+
+    public function manage_department_user_column($columns)
+    {
+        unset($columns['posts']);
+        $columns['users'] = __('Users');
+        return $columns;
+    }
+
+    public function update_department_count($terms, $taxonomy)
+    {
+        global $wpdb;
+        foreach ((array)$terms as $term) {
+            $count = $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM $wpdb->term_relationships WHERE term_taxonomy_id = %d", $term));
+            do_action('edit_term_taxonomy', $term, $taxonomy);
+            $wpdb->update($wpdb->term_taxonomy, compact('count'), array('term_taxonomy_id' => $term));
+            do_action('edited_term_taxonomy', $term, $taxonomy);
+        }
+    }
+
+    public function manage_department_column($display, $column, $term_id)
+    {
+        if ('users' === $column) {
+            $term = get_term($term_id, 'department');
+            echo $term->count;
+        }
+    }
+
+    add_action( 'object_sync_for_salesforce_pull_success', array($this, 'FFC_pull_success'), 10, 3 );
+
+     public function FFC_pull_success( $op, $result, $synced_object ) {
+        $map = $synced_object['mapping_object'];
+        $salesforce_id = $map['salesforce_id'];
+        $user_id = $map['wordpress_id'];
+
+        update_user_meta( $user_id, 'SalesforceID',$saleforce_id );
+    }
+
+    public function edit_user_department_section($user)
+    {
+        $tax = get_taxonomy('department');
+        /* Make sure the user can assign terms of the department taxonomy before proceeding. */
+        if (!current_user_can($tax->cap->assign_terms))
+            return;
+        /* Get the terms of the 'department' taxonomy. */
+        $terms = get_terms('department', array('hide_empty' => false)); ?>
+        <h3><?php _e('Department'); ?></h3>
+        <table class="form-table">
+            <tr>
+                <th><label for="department"><?php _e('Select Department'); ?></label></th>
+                <td><?php
+                    /* If there are any department terms, loop through them and display checkboxes. */
+                    if (!empty($terms)) {
+                        foreach ($terms as $term) { ?>
+                            <input type="radio" name="department" id="department-<?php echo esc_attr($term->slug); ?>"
+                                value="<?php echo esc_attr($term->slug); ?>" <?php checked(true, is_object_in_term($user->ID, 'department', $term)); ?> />
+                            <label for="department-<?php echo esc_attr($term->slug); ?>"><?php echo $term->name; ?></label>
+                            <br/>
+                        <?php }
+                    } /* If there are no department terms, display a message. */
+                    else {
+                        _e('There are no departments available.');
+                    }
+                    ?></td>
+            </tr>
+        </table>
+    <?php 
+    }
+
+    public function save_user_department_terms($user_id)
+    {
+        $tax = get_taxonomy('department');
+        if (!current_user_can('edit_user', $user_id) && current_user_can($tax->cap->assign_terms))
+            return false;
+        $term = esc_attr(sanitize_text_field($_POST['department']));
+        wp_set_object_terms($user_id, array($term), 'department', false);
+        clean_object_term_cache($user_id, 'department');
+    }
 }
 
-function aio_save_user_department_terms_lite($user_id)
-{
-    $tax = get_taxonomy('department');
-    if (!current_user_can('edit_user', $user_id) && current_user_can($tax->cap->assign_terms))
-        return false;
-    $term = esc_attr(sanitize_text_field($_POST['department']));
-    wp_set_object_terms($user_id, array($term), 'department', false);
-    clean_object_term_cache($user_id, 'department');
-}
+$FFC_timeclock = new FFC_Volunteer_Timeclock();
