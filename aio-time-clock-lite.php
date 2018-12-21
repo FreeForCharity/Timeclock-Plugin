@@ -14,7 +14,7 @@ class FFC_Volunteer_Timeclock {
         add_shortcode('show_aio_employee_profile_lite', array($this, 'show_employee_profile'));
         add_action('wp_ajax_aio_time_clock_js', array($this, 'time_clock_js'));
         add_action('wp_ajax_nopriv_aio_time_clock_js', array($this, 'time_clock_js'));
-        add_action('wp_ajax_aio_time_clock_admin_js', array($this, 'time_clock_admin_js');
+        add_action('wp_ajax_aio_time_clock_admin_js', array($this, 'time_clock_admin_js'));
         add_action('wp_ajax_nopriv_aio_time_clock_admin_js', array($this, 'time_clock_admin_js');
         add_action('admin_init', array($this, 'custom_post_shift'));
         add_action("admin_init", array($this, 'admin_init');
@@ -22,7 +22,7 @@ class FFC_Volunteer_Timeclock {
         add_action('admin_menu', array($this, 'remove_my_post_metaboxes'));
         add_action('admin_init', 'register_aio_timeclock_lite_settings');
         add_action('init', array($this, 'script_enqueuer'));
-        add_action('admin_init', 'admin_script_enqueuer');
+        add_action('admin_init', array($this, 'admin_script_enqueuer'));
         add_filter('user_contactmethods', 'aio_modify_employee_wage_lite');
         add_filter('manage_edit-department_columns', 'aio_manage_department_user_column_lite');
         add_action('show_user_profile', 'aio_edit_user_department_section_lite');
@@ -530,18 +530,18 @@ class FFC_Volunteer_Timeclock {
         add_meta_box(
             'shift_info_box',
             __('Shift Info', 'aio-timeclock'),
-            'aio_shift_info_box_content',
+            array($this, 'aio_shift_info_box_content'),
             'shift',
             'normal',
             'high'
         );
     }
 
-}
+    public function aio_shift_info_box_content()
+    {
+        include "aio-time-clock-box-content.php";
+    }
 
-function aio_shift_info_box_content()
-{
-    include "aio-time-clock-box-content.php";
 }
 
 function aioGetEmployeeSelect($selected)
